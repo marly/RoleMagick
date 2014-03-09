@@ -81,8 +81,9 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
     $options = array();
     $user_table = $this->_db->getTable('User');
+    $assinable_users = $user_table->findBy(array('role'=>['admin', 'super', 'partner', 'researcher']));
 
-    foreach ($user_table.fetchAll() as $user) {
+    foreach ($assignable_users as $user) {
       $options[$user['id']] = $user['name'] ? $user['name'] : $user['username'];
     }
 
