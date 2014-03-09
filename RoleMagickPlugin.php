@@ -29,11 +29,18 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
   public function hookUninstall($args)
   {
-    // Nothing to do yet.
+    // Downgrade Partners to Researchers
+    $partners = $this->_$db->getTable('User')->findBy(array('role'=>'partner'));
+    foreach($partners as $partner) {
+      $partner->role = 'researcher';
+      $partner->save();
+    }
   }
 
   public function hookDefineAcl($args)
   {
+    $acl = $args['acl'];
+    $acl->addRole(new Zend_Acl_Role('partner'), 'researcher');
   }
 
   public function hookConfig($args)
@@ -44,7 +51,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   {
   }
 
-  public function hookBeforeSaveUser($args)
+  public function hookBeforeSaveCollection($args)
   {
   }
 
