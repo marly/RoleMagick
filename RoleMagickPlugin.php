@@ -30,7 +30,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   public function hookUninstall($args)
   {
     // Downgrade Partners to Researchers
-    $partners = $this->_$db->getTable('User')->findBy(array('role'=>'partner'));
+    $partners = $this->_db->getTable('User')->findBy(array('role'=>'partner'));
     foreach($partners as $partner) {
       $partner->role = 'researcher';
       $partner->save();
