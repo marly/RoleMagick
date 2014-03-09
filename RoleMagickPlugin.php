@@ -30,7 +30,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   public function hookUninstall($args)
   {
     // Downgrade Partners to Researchers
-    $partners = $this->_db->getTable('User')->findAll();
+    $partners = $this->_db->getTable('User')->findBy(array('role' => 'partner'));
     foreach($partners as $partner) {
       $partner->role = 'researcher';
       $partner->save();
@@ -64,7 +64,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     $user_table = $this->_db->getTable('User');
     $options = $this->findUserPairsForSelectForm();
     $options = array('0' => 'No owner') + $options;
-    $owner = $user_table.find($args['collection']->owner_id);
+    $owner = $user_table->find($args['collection']->owner_id);
     $ownerId = $owner ? $owner->id : 0;
     $tabs['Ownership'] = get_view()->partial(
       'collections/role-magick-owner-form.php',
@@ -81,7 +81,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
     $options = array();
     $user_table = $this->_db->getTable('User');
-    $assinable_users = $user_table->findBy(array('role'=>['admin', 'super', 'partner', 'researcher']));
+    $assignable_users = $user_table->findAll();
 
     foreach ($assignable_users as $user) {
       $options[$user['id']] = $user['name'] ? $user['name'] : $user['username'];
