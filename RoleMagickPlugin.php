@@ -6,6 +6,7 @@
  */
 
 define('ROLE_MAGICK_PLUGIN_DIR', PLUGIN_DIR . '/RoleMagick');
+require_once(ROLE_MAGICK_PLUGIN_DIR . '/libraries/RoleMagick_AssertPartner.php');
 
 class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 {
@@ -23,13 +24,6 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   protected $_filters = array(
     'admin_collections_form_tabs'
   );
-
-  public function setUp()
-  {
-    parent::setUp();
-    require_once(ROLE_MAGICK_PLUGIN_DIR . '/libraries/RoleMagick_AssertPartner.php');
-    Zend_Controller_Front::getInstance()->registerPlugin(new RoleMagick_AssertPartner);
-  }
 
   public function hookInstall()
   {

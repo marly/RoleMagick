@@ -22,11 +22,10 @@ class RoleMagick_AssertPartner implements Zend_Acl_Assert_Interface
     $allPriv = $privilege . 'All';
     $selfPriv = $privilege . 'Self';
 
-    // Only applies to Items and Collections
-    if ($resource instanceof Item || $resource instanceof Collection) {
-      $allowed = $acl->isAllowed($role, $resource, $allPriv)
-             || ($acl->isAllowed($role, $resource, $selfPriv)
-                 && $this->_userIsPartnered($role, $resource));
+    // Allow if user is partnered
+    if (($role instanceof User) && ($resource instanceof Omeka_Record_AbstractRecord)) {
+      $allowed = ($acl->isAllowed($role, $resource, $allPriv)
+                  || $this->_userIsPartnered($role, $resource));
     } else {
       $allowed = false;
     }
@@ -46,14 +45,12 @@ class RoleMagick_AssertPartner implements Zend_Acl_Assert_Interface
       $collection_id = $record->collection_id;
     }
 
-    if (empty($collection_id)) {
-      return false;
-    // if owns collection, then true
-    } else if ($collection = $this->db->getTable('Collection')->find($collection_id)) {
-      return $this->userOwnsRecord($user, $collection);
+    if (!empty($collection_id) && 
+        $collection = get_db()->getTable('Collection')->find($collection_id)) {
+      // if owns collection, then true
+      return $this->_userOwnsRecord($user, $collection);
     } else {
       return false;
-
     }
   }
 
