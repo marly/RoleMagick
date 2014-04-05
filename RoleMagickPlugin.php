@@ -80,7 +80,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   {
     // Only show if current user is admin or above.
     $currentRole = current_user()->role;
-    if $currentRole == 'admin' || $currentRole == 'super') {
+    if($currentRole == 'admin' || $currentRole == 'super') {
       $user_table = $this->_db->getTable('User');
       $options = $this->findUserPairsForSelectForm();
       $options = array('0' => 'No owner') + $options;
