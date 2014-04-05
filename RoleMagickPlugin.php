@@ -78,15 +78,19 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
   public function filterAdminCollectionsFormTabs($tabs, $args)
   {
-    $user_table = $this->_db->getTable('User');
-    $options = $this->findUserPairsForSelectForm();
-    $options = array('0' => 'No owner') + $options;
-    $owner = $user_table->find($args['collection']->owner_id);
-    $ownerId = $owner ? $owner->id : 0;
-    $tabs['Ownership'] = get_view()->partial(
-      'collections/role-magick-owner-form.php',
-      array('options' => $options, 'owner_id' => $ownerId)
-    );
+    // Only show if current user is admin or above.
+    $currentRole = current_user()->role;
+    if $currentRole == 'admin' || $currentRole == 'super') {
+      $user_table = $this->_db->getTable('User');
+      $options = $this->findUserPairsForSelectForm();
+      $options = array('0' => 'No owner') + $options;
+      $owner = $user_table->find($args['collection']->owner_id);
+      $ownerId = $owner ? $owner->id : 0;
+      $tabs['Ownership'] = get_view()->partial(
+        'collections/role-magick-owner-form.php',
+        array('options' => $options, 'owner_id' => $ownerId)
+      );
+    }
     return $tabs;
   }
 
