@@ -18,11 +18,11 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     'config_form',
     'before_save_collection',
     'initialize'
-    //'admin_append_to_collections_form'
   );
 
   protected $_filters = array(
-    'admin_collections_form_tabs'
+    'admin_collections_form_tabs',
+    'collections_select_options'
   );
 
   public function hookInstall()
@@ -92,6 +92,28 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
       );
     }
     return $tabs;
+  }
+
+  public function filterCollectionsSelectOptions($options) {
+    $currentRole = current_user()->role;
+    if ($currentRole == 'partner') {
+      return $this->findCollectionPairsForPartner(current_user(), $options);
+    } else {
+      return $options;
+    }
+  }
+
+  public function findCollectionPairsForPartner($user, $options) {
+    $user_id = $user->id;
+    $new_options = array();
+    $table = $this->_db->getTable('Collection');
+    $collections = $table->findBy(array('owner_id' => $user_id));
+    foreach ($collections as $c) {
+      if (array_key_exists($c->id, $options)) {
+        $new_options[$c->id] = $options[$c->id];
+      }
+    }
+    return $new_options;
   }
 
   public function findUserPairsForSelectForm($padding = '-'){
