@@ -23,7 +23,9 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
   protected $_filters = array(
     'admin_collections_form_tabs',
-    'collections_select_options'
+    'collections_select_options',
+    'collections_browse_params',
+    'items_browse_params')
   );
 
   public function hookInstall()
@@ -83,12 +85,9 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
       if(empty($item['collection_id'])) {
         $item->addError('collection_id', 'Must belong to a collection.');
       }else {
-        $collection_ids = array();
-        $collections = findPartnerCollections(current_user());
-        foreach ($collections as $c) {
-          $collection_ids[] = $c->id
-        }
-        if(!in_array($item['collection_id'], $ids) {
+        $collection_ids = findPartnerCollectionIds(current_user());
+
+        if(!in_array($item['collection_id'], $collection_ids)) {
           $item->addError('collection_id', 'Must belong to a partnered collection.');
         }
       }
@@ -126,6 +125,22 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     }
   }
 
+  public function filterItemsBrowseParams($params){
+    $user = current_user();
+    if($user->role == 'partner'){
+      $params['collection_id'] = findPartnerCollectionIds($user);
+    }
+    return $params;
+  }
+
+  public function filterCollectionsBrowseParams($params){
+    $user = current_user();
+    if($user->role == 'partner'){
+      $params['id'] = findPartnerCollectionIds($user);
+    }
+    return $params;
+  }
+
   public function findCollectionPairsForPartner($user, $options) {
     $new_options = array();
     $collections = findPartnerCollections($user);
@@ -155,9 +170,20 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   }
 
   public function findPartnerCollections($user) {
+    /* Finds a list of collections that the current user can access */
     $table = $this->_db->getTable('Collection');
     $collections = $table->findBy(array('owner_id' => $user->id));
     return $collections;
+  }
+
+  public function findPartnerCollectionIds($user) {
+    /* Finds a list of collection ids that the current user can access */
+    $collection_ids = array();
+    $collections = findPartnerCollections($user) ;
+    foreach ($collections as $c) {
+      $collection_ids[] = $c->id;
+    }
+    return $collection_ids;
   }
 
 }
