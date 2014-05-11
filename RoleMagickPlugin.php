@@ -17,6 +17,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     'config',
     'config_form',
     'before_save_collection',
+    'before_save_item',
     'initialize'
   );
 
@@ -72,6 +73,28 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   {
   }
 
+  public function hookBeforeSaveItem($args)
+  {
+    $item = $args['record'];
+    $user = current_user();
+
+    // partners must associate items with a collection they're partnered with
+    if($user->role == 'partner') {
+      if(empty($item['collection_id'])) {
+        $item->addError('collection_id', 'Must belong to a collection.');
+      }else {
+        $collection_ids = array();
+        $collections = findPartnerCollections(current_user());
+        foreach ($collections as $c) {
+          $collection_ids[] = $c->id
+        }
+        if(!in_array($item['collection_id'], $ids) {
+          $item->addError('collection_id', 'Must belong to a partnered collection.');
+        }
+      }
+    }
+  }
+
   public function hookInitialize()
   {
   }
@@ -104,10 +127,8 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   }
 
   public function findCollectionPairsForPartner($user, $options) {
-    $user_id = $user->id;
     $new_options = array();
-    $table = $this->_db->getTable('Collection');
-    $collections = $table->findBy(array('owner_id' => $user_id));
+    $collections = findPartnerCollections($user);
     foreach ($collections as $c) {
       if (array_key_exists($c->id, $options)) {
         $new_options[$c->id] = $options[$c->id];
@@ -131,6 +152,12 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     }
 
     return $options;
+  }
+
+  public function findPartnerCollections($user) {
+    $table = $this->_db->getTable('Collection');
+    $collections = $table->findBy(array('owner_id' => $user->id));
+    return $collections;
   }
 
 }
