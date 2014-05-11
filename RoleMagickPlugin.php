@@ -18,14 +18,14 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     'config_form',
     'before_save_collection',
     'before_save_item',
-    'initialize'
+    'initialize',
+    'item_browse_sql',
+    'collection_browse_sql'
   );
 
   protected $_filters = array(
     'admin_collections_form_tabs',
-    'collections_select_options',
-    'collections_browse_params',
-    'items_browse_params')
+    'collections_select_options'
   );
 
   public function hookInstall()
@@ -85,7 +85,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
       if(empty($item['collection_id'])) {
         $item->addError('collection_id', 'Must belong to a collection.');
       }else {
-        $collection_ids = findPartnerCollectionIds(current_user());
+        $collection_ids = $this->findPartnerCollectionIds(current_user());
 
         if(!in_array($item['collection_id'], $collection_ids)) {
           $item->addError('collection_id', 'Must belong to a partnered collection.');
@@ -96,6 +96,20 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
 
   public function hookInitialize()
   {
+  }
+
+  public function hookItemBrowseSql($select, $params){
+    $user = current_user();
+    if($user->role == 'partner'){
+      $select->where('collection_id IN (?)', $this->findPartnerCollectionIds($user));
+    }
+  }
+
+  public function hookCollectionBrowseSql($select, $params){
+    $user = current_user();
+    if($user->role == 'partner'){
+      $select->where('id IN (?)', $this->findPartnerCollectionIds($user));
+    }
   }
 
   public function filterAdminCollectionsFormTabs($tabs, $args)
@@ -125,25 +139,9 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     }
   }
 
-  public function filterItemsBrowseParams($params){
-    $user = current_user();
-    if($user->role == 'partner'){
-      $params['collection_id'] = findPartnerCollectionIds($user);
-    }
-    return $params;
-  }
-
-  public function filterCollectionsBrowseParams($params){
-    $user = current_user();
-    if($user->role == 'partner'){
-      $params['id'] = findPartnerCollectionIds($user);
-    }
-    return $params;
-  }
-
   public function findCollectionPairsForPartner($user, $options) {
     $new_options = array();
-    $collections = findPartnerCollections($user);
+    $collections = $this->findPartnerCollections($user);
     foreach ($collections as $c) {
       if (array_key_exists($c->id, $options)) {
         $new_options[$c->id] = $options[$c->id];
@@ -179,7 +177,7 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   public function findPartnerCollectionIds($user) {
     /* Finds a list of collection ids that the current user can access */
     $collection_ids = array();
-    $collections = findPartnerCollections($user) ;
+    $collections = $this->findPartnerCollections($user) ;
     foreach ($collections as $c) {
       $collection_ids[] = $c->id;
     }
