@@ -19,8 +19,8 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
     'before_save_collection',
     'before_save_item',
     'initialize',
-    'item_browse_sql',
-    'collection_browse_sql'
+    'items_browse_sql',
+    'collections_browse_sql'
   );
 
   protected $_filters = array(
@@ -98,17 +98,21 @@ class RoleMagickPlugin extends Omeka_Plugin_AbstractPlugin
   {
   }
 
-  public function hookItemBrowseSql($select, $params){
+  public function hookItemsBrowseSql($args){
+    $select = $args['select'];
+    $params = $args['params'];
     $user = current_user();
     if($user->role == 'partner'){
-      $select->where('collection_id IN (?)', $this->findPartnerCollectionIds($user));
+      $select->where("items.collection_id IN (?)", $this->findPartnerCollectionIds($user));
     }
   }
 
-  public function hookCollectionBrowseSql($select, $params){
+  public function hookCollectionsBrowseSql($args){
+    $select = $args['select'];
+    $params = $args['params'];
     $user = current_user();
     if($user->role == 'partner'){
-      $select->where('id IN (?)', $this->findPartnerCollectionIds($user));
+      $select->where("collections.owner_id IN (?)", $user->id);
     }
   }
 
